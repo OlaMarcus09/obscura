@@ -1,65 +1,76 @@
-import Image from "next/image";
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="relative flex min-h-screen flex-col overflow-hidden bg-obsidian">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[600px] w-[800px] rounded-full bg-white/[0.03] blur-3xl" />
+
+      {/* Hero */}
+      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <p className="text-xs tracking-[0.3em] text-white/30 uppercase">
+          Creative delivery, reimagined
+        </p>
+        <h1 className="mt-4 max-w-2xl font-serif text-5xl font-semibold leading-[1.1] tracking-tight text-white sm:text-7xl">
+          Your work, unveiled<br className="hidden sm:block" /> on your terms.
+        </h1>
+        <p className="mt-6 max-w-lg text-base leading-relaxed text-white/50">
+          Obscura is a paywall-gated delivery platform for creatives. Upload
+          your work, set a price, share a link. Clients pay to unlock.
+        </p>
+
+        <div className="mt-10 flex items-center gap-4">
+          <Link
+            href="/auth/sign-up"
+            className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-[0_0_24px_rgba(255,255,255,0.12)] active:scale-95"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Get Started
+          </Link>
+          <Link
+            href="/auth/sign-in"
+            className="rounded-full border border-white/15 px-7 py-3 text-sm font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
           >
-            Documentation
-          </a>
+            Sign In
+          </Link>
         </div>
-      </main>
-    </div>
-  );
+      </section>
+
+      {/* Value props */}
+      <section className="relative z-10 border-t border-white/[0.06] bg-white/[0.015]">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-px sm:grid-cols-3">
+          {[
+            {
+              title: 'Upload & Obscure',
+              desc: 'Drop your work in. It stays blurred and locked until a client pays.',
+            },
+            {
+              title: 'Share a Link',
+              desc: 'Every delivery gets a unique link. No accounts needed for your clients.',
+            },
+            {
+              title: 'Get Paid Instantly',
+              desc: 'Stripe-powered payments land in your account. No middlemen, no delays.',
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="border-r border-white/[0.06] px-8 py-12 last:border-r-0"
+            >
+              <h3 className="text-sm font-medium text-white/80">{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-white/40">
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/[0.06] px-6 py-8">
+        <p className="text-center font-serif text-sm tracking-wide text-white/20">
+          Obscura
+        </p>
+      </footer>
+    </main>
+  )
 }
