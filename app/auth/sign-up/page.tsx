@@ -1,11 +1,40 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signUpWithEmail } from './actions'
+import { authClient } from '@/lib/auth/client'
 
 export default function SignUpPage() {
-  const [state, formAction, isPending] = useActionState(signUpWithEmail, null)
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+    setIsPending(true)
+
+    const form = new FormData(e.currentTarget)
+    const email = (form.get('email') as string)?.trim()
+    const name = (form.get('name') as string)?.trim()
+    const password = form.get('password') as string
+
+    if (!email) { setError('Email is required.'); setIsPending(false); return }
+    if (!name) { setError('Name is required.'); setIsPending(false); return }
+    if (!password || password.length < 8) { setError('Password must be at least 8 characters.'); setIsPending(false); return }
+
+    const { error: authError } = await authClient.signUp.email({ email, name, password })
+
+    if (authError) {
+      setError(authError.message || 'Failed to create account.')
+      setIsPending(false)
+      return
+    }
+
+    router.push('/dashboard')
+    router.refresh()
+  }
 
   return (
     <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-6">
@@ -19,7 +48,7 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <form action={formAction} className="mt-8 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
           <div>
             <label htmlFor="name" className="block text-xs font-medium text-white/50">
               Name
@@ -63,9 +92,9 @@ export default function SignUpPage() {
             />
           </div>
 
-          {state?.error && (
+          {error && (
             <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-              {state.error}
+              {error}
             </p>
           )}
 
