@@ -59,7 +59,7 @@ export function UploadDropzone() {
           setDragging(false)
           onFiles(e.dataTransfer.files)
         }}
-        className={`mt-4 flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed transition-colors ${
+        className={`mt-4 flex aspect-[4/3] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed transition-colors sm:aspect-video ${
           dragging
             ? 'border-white/60 bg-white/[0.06]'
             : 'border-white/15 hover:border-white/30'

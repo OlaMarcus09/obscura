@@ -1,9 +1,8 @@
 'use server'
 
 import { randomBytes, randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import { revalidatePath } from 'next/cache'
+import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
 import { projects, assets, deliveryLinks } from '@/lib/schema'
 import { getCurrentCreatorId } from '@/lib/auth'
@@ -14,10 +13,9 @@ export type UploadResult =
 
 /**
  * Handles a creator upload:
- *  1. Persists the file to /public/uploads (MOCK storage — real storage is
- *     UploadThing/R2 later).
- *  2. Mocks watermark generation (reuses the original URL; the "obscured"
- *     look is a CSS/blur effect applied on the Phase 3 paywall page).
+ *  1. Persists the file to Vercel Blob storage.
+ *  2. Reuses the original URL as the watermark (the "obscured" look is a
+ *     CSS/blur effect applied on the paywall page).
  *  3. Creates project + asset + a shareable delivery_link token.
  */
 export async function uploadProject(
@@ -38,14 +36,11 @@ export async function uploadProject(
   if (!file.type.startsWith('image/'))
     return { ok: false, error: 'Only image assets are supported for now.' }
 
-  // --- MOCK storage: write bytes to /public/uploads ---
+  // --- Vercel Blob storage ---
   const buffer = Buffer.from(await file.arrayBuffer())
-  const ext = path.extname(file.name) || '.bin'
+  const ext = file.name.slice(file.name.lastIndexOf('.')) || '.bin'
   const storedName = `${randomUUID()}${ext}`
-  const dir = path.join(process.cwd(), 'public', 'uploads')
-  await mkdir(dir, { recursive: true })
-  await writeFile(path.join(dir, storedName), buffer)
-  const fileUrl = `/uploads/${storedName}`
+  const { url: fileUrl } = await put(storedName, buffer, { access: 'public' })
 
   const priceCents = Math.round(priceDollars * 100)
   const token = randomBytes(16).toString('hex')
