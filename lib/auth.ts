@@ -13,7 +13,14 @@ import { eq } from 'drizzle-orm'
  * `public.users`, so we upsert one.
  */
 export async function getCurrentCreatorId(): Promise<string> {
-  const { data: session } = await auth.getSession()
+  let session
+  try {
+    const result = await auth.getSession()
+    session = result.data
+  } catch (err) {
+    console.error('[getCurrentCreatorId] auth.getSession() threw:', err)
+    redirect('/auth/sign-in')
+  }
 
   if (!session?.user) {
     redirect('/auth/sign-in')
@@ -22,14 +29,19 @@ export async function getCurrentCreatorId(): Promise<string> {
   const neonUserId = session.user.id
 
   // Ensure a public.users row exists for this Neon Auth user
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, neonUserId))
-    .limit(1)
+  try {
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, neonUserId))
+      .limit(1)
 
-  if (existing.length === 0) {
-    await db.insert(users).values({ id: neonUserId, role: 'creator' })
+    if (existing.length === 0) {
+      await db.insert(users).values({ id: neonUserId, role: 'creator' })
+    }
+  } catch (err) {
+    console.error('[getCurrentCreatorId] DB upsert failed:', err)
+    throw new Error('Failed to initialize creator profile.')
   }
 
   return neonUserId
@@ -39,11 +51,15 @@ export async function getCurrentCreatorId(): Promise<string> {
  * Returns session info for display (name, email) or null if not signed in.
  */
 export async function getSessionUser() {
-  const { data: session } = await auth.getSession()
-  if (!session?.user) return null
-  return {
-    id: session.user.id,
-    name: session.user.name,
-    email: session.user.email,
+  try {
+    const { data: session } = await auth.getSession()
+    if (!session?.user) return null
+    return {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+    }
+  } catch {
+    return null
   }
 }
