@@ -1,4 +1,6 @@
-import { eq, desc } from 'drizzle-orm'
+import 'server-only'
+
+import { and, desc, eq, gt, or, isNull } from 'drizzle-orm'
 import { db } from './db'
 import { projects, assets, deliveryLinks, users } from './schema'
 
@@ -54,7 +56,6 @@ export type DeliveryPageData = {
   price: number
   creatorRole: string
   watermarkedUrl: string
-  originalUrl: string
   assetMimeType: string
 }
 
@@ -67,14 +68,17 @@ export async function getDeliveryByToken(
       price: projects.price,
       creatorRole: users.role,
       watermarkedUrl: assets.watermarkedUrl,
-      originalUrl: assets.originalUrl,
       assetMimeType: assets.mimeType,
     })
     .from(deliveryLinks)
     .innerJoin(projects, eq(projects.id, deliveryLinks.projectId))
     .innerJoin(users, eq(users.id, projects.creatorId))
     .innerJoin(assets, eq(assets.projectId, projects.id))
-    .where(eq(deliveryLinks.token, token))
+    .where(and(
+      eq(deliveryLinks.token, token),
+      eq(projects.status, 'active'),
+      or(isNull(deliveryLinks.expiresAt), gt(deliveryLinks.expiresAt, new Date())),
+    ))
     .limit(1)
 
   if (rows.length === 0) return null
@@ -84,8 +88,9 @@ export async function getDeliveryByToken(
     projectTitle: row.projectTitle,
     price: row.price,
     creatorRole: row.creatorRole,
-    watermarkedUrl: row.watermarkedUrl ?? row.originalUrl,
-    originalUrl: row.originalUrl,
+    // A missing derivative is intentionally represented by a generic preview,
+    // never by the private original URL.
+    watermarkedUrl: row.watermarkedUrl ?? '/window.svg',
     assetMimeType: row.assetMimeType,
   }
 }

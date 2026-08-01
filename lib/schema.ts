@@ -5,6 +5,7 @@ import {
   integer,
   boolean,
   timestamp,
+  index,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -46,3 +47,31 @@ export const accessLogs = pgTable('access_logs', {
   downloadedAt: timestamp('downloaded_at', { withTimezone: true }).defaultNow(),
   paid: boolean('paid').notNull().default(false),
 })
+
+export const communityProfiles = pgTable('community_profiles', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  handle: text('handle').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  bio: text('bio'),
+  avatarUrl: text('avatar_url'),
+  websiteUrl: text('website_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const communityPosts = pgTable('community_posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  creatorId: uuid('creator_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  caption: text('caption'),
+  imageUrl: text('image_url').notNull(),
+  imageMimeType: text('image_mime_type').notNull(),
+  imageSize: integer('image_size').notNull(),
+  tags: text('tags').array().notNull().default([]),
+  status: text('status', { enum: ['published', 'archived'] }).notNull().default('published'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  feedIndex: index('community_posts_feed_idx').on(table.status, table.createdAt),
+  creatorIndex: index('community_posts_creator_idx').on(table.creatorId, table.createdAt),
+}))

@@ -31,13 +31,25 @@ export async function getCurrentCreatorId(): Promise<string> {
   // Ensure a public.users row exists for this Neon Auth user
   try {
     const existing = await db
-      .select({ id: users.id })
+      .select({ id: users.id, role: users.role })
       .from(users)
       .where(eq(users.id, neonUserId))
       .limit(1)
 
     if (existing.length === 0) {
-      await db.insert(users).values({ id: neonUserId, role: 'creator' })
+      await db
+        .insert(users)
+        .values({ id: neonUserId, role: 'creator' })
+        .onConflictDoNothing({ target: users.id })
+    }
+
+    const profile = existing[0] ?? (await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, neonUserId))
+      .limit(1))[0]
+    if (profile?.role !== 'creator') {
+      throw new Error('Creator access required.')
     }
   } catch (err) {
     console.error('[getCurrentCreatorId] DB upsert failed:', err)
@@ -45,6 +57,16 @@ export async function getCurrentCreatorId(): Promise<string> {
   }
 
   return neonUserId
+}
+
+export async function getRequiredUserId(): Promise<string> {
+  try {
+    const { data: session } = await auth.getSession()
+    if (!session?.user) redirect('/auth/sign-in')
+    return session.user.id
+  } catch {
+    redirect('/auth/sign-in')
+  }
 }
 
 /**

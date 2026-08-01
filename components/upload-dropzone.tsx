@@ -86,7 +86,7 @@ export function UploadDropzone() {
           ref={inputRef}
           type="file"
           name="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           className="hidden"
           onChange={(e) => onFiles(e.target.files)}
         />

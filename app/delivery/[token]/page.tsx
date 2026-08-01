@@ -3,6 +3,7 @@ import { getDeliveryByToken } from '@/lib/queries'
 import { PaywallCard } from '@/components/paywall-card'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 function formatPrice(cents: number) {
   return new Intl.NumberFormat('en-US', {

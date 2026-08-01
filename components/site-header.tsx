@@ -15,6 +15,8 @@ export async function SiteHeader() {
         <nav className="flex items-center gap-3">
           {user ? (
             <>
+              <Link href="/community" className="text-sm text-white/50 transition-colors hover:text-white">Community</Link>
+              <Link href="/dashboard" className="text-sm text-white/50 transition-colors hover:text-white">Studio</Link>
               <span className="text-sm text-white/40">{user.email}</span>
               <SignOutButton />
             </>
