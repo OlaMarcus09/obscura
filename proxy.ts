@@ -14,7 +14,15 @@ export const config = {
      * - /_next (static assets)
      * - favicon.ico
      */
-    '/dashboard/:path*',
-    '/community/new/:path*',
+    {
+      source: '/dashboard/:path*',
+      // Server Actions POST back to the current page with this header. They
+      // perform their own auth checks and must not be redirected by Proxy.
+      missing: [{ type: 'header', key: 'next-action' }],
+    },
+    {
+      source: '/community/new/:path*',
+      missing: [{ type: 'header', key: 'next-action' }],
+    },
   ],
 }
