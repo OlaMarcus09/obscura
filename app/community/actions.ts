@@ -32,7 +32,8 @@ export async function saveCommunityProfile(formData: FormData): Promise<Communit
 }
 
 export async function createCommunityPost(formData: FormData): Promise<CommunityResult> {
-  const userId = await getRequiredUserId()
+  let userId: string
+  try { userId = await getRequiredUserId() } catch (error) { return { ok: false, error: error instanceof Error ? error.message : 'Unable to verify your session.' } }
   const title = String(formData.get('title') ?? '').trim()
   const caption = String(formData.get('caption') ?? '').trim()
   const file = formData.get('image')
@@ -41,10 +42,15 @@ export async function createCommunityPost(formData: FormData): Promise<Community
   const bytes = Buffer.from(await file.arrayBuffer())
   if (!validImage(file, bytes)) return { ok: false, error: 'Only valid JPEG, PNG, or WebP images are supported.' }
   const ext = file.type === 'image/jpeg' ? '.jpg' : file.type === 'image/png' ? '.png' : '.webp'
-  const url = (await put(`community/${randomUUID()}${ext}`, bytes, { access: 'public', contentType: file.type })).url
+  let url: string | undefined
   try {
+    url = (await put(`community/${randomUUID()}${ext}`, bytes, { access: 'public', contentType: file.type })).url
     await db.insert(communityPosts).values({ creatorId: userId, title, caption: caption || null, imageUrl: url, imageMimeType: file.type, imageSize: file.size })
-  } catch { await del(url).catch(() => {}); return { ok: false, error: 'Could not publish your showcase.' } }
+  } catch (error) {
+    if (url) await del(url).catch(() => {})
+    console.error('[createCommunityPost] persistence failed:', error)
+    return { ok: false, error: 'Could not publish your showcase. Check Blob storage configuration.' }
+  }
   revalidatePath('/community')
   return { ok: true }
 }

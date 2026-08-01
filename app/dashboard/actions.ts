@@ -23,7 +23,8 @@ export async function uploadProject(
   _prev: UploadResult | null,
   formData: FormData
 ): Promise<UploadResult> {
-  const creatorId = await getCurrentCreatorId()
+  let creatorId: string
+  try { creatorId = await getCurrentCreatorId() } catch (error) { return { ok: false, error: error instanceof Error ? error.message : 'Unable to verify your session.' } }
 
   const title = String(formData.get('title') ?? '').trim()
   const priceDollars = Number(formData.get('price'))

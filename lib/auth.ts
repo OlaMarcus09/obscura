@@ -60,13 +60,15 @@ export async function getCurrentCreatorId(): Promise<string> {
 }
 
 export async function getRequiredUserId(): Promise<string> {
+  let session
   try {
-    const { data: session } = await auth.getSession()
-    if (!session?.user) redirect('/auth/sign-in')
-    return session.user.id
+    const result = await auth.getSession()
+    session = result.data
   } catch {
-    redirect('/auth/sign-in')
+    throw new Error('Unable to verify your session.')
   }
+  if (!session?.user) redirect('/auth/sign-in')
+  return session.user.id
 }
 
 /**
