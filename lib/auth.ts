@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { redirect } from 'next/navigation'
+import { redirect, unstable_rethrow } from 'next/navigation'
 import { auth } from '@/lib/auth/server'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
@@ -18,6 +18,7 @@ export async function getCurrentCreatorId(): Promise<string> {
     const result = await auth.getSession()
     session = result.data
   } catch (err) {
+    unstable_rethrow(err)
     console.error('[getCurrentCreatorId] auth.getSession() threw:', err)
     redirect('/auth/sign-in')
   }
@@ -64,7 +65,10 @@ export async function getRequiredUserId(): Promise<string> {
   try {
     const result = await auth.getSession()
     session = result.data
-  } catch {
+  } catch (err) {
+    // Request-time APIs throw framework signals during static prerendering.
+    // They must be returned to Next.js so it can switch this route to dynamic.
+    unstable_rethrow(err)
     throw new Error('Unable to verify your session.')
   }
   if (!session?.user) redirect('/auth/sign-in')
@@ -83,7 +87,8 @@ export async function getSessionUser() {
       name: session.user.name,
       email: session.user.email,
     }
-  } catch {
+  } catch (err) {
+    unstable_rethrow(err)
     return null
   }
 }

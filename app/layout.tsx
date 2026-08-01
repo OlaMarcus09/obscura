@@ -5,6 +5,8 @@ import { InactivityLock } from "@/components/inactivity-lock";
 import { getSessionUser } from "@/lib/auth";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
